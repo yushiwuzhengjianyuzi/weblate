@@ -14,9 +14,12 @@ from .format import BaseFormatCheck
 ANGULARJS_INTERPOLATION_MATCH = re.compile(
     r"""
     {{              # start symbol
-        \s*         # ignore whitespace
-        ((.+?))
-        \s*         # ignore whitespace
+        (           # interpolation expression
+            (?:
+                (?!{{|}})  # stop at the next delimiter, even if it is unclosed
+                [\s\S]
+            )+
+        )
     }}              # end symbol
     """,
     re.VERBOSE,

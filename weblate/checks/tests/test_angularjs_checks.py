@@ -5,6 +5,10 @@
 
 """Tests for AngularJS checks."""
 
+from __future__ import annotations
+
+from time import monotonic
+
 from weblate.checks.angularjs import AngularJSInterpolationCheck
 from weblate.checks.tests.test_checks import CheckTestCase
 from weblate.trans.tests.factories import make_unit
@@ -73,6 +77,20 @@ class AngularJSInterpolationCheckTest(CheckTestCase):
                 False,
                 make_unit(),
             )
+        )
+
+    def test_unterminated_interpolations(self) -> None:
+        target = "{{" * 32000
+        started = monotonic()
+        self.assertEqual(self.check.extract_matches(target), [])
+        self.assertLess(monotonic() - started, 1)
+
+    def test_valid_interpolation_after_unterminated_one(self) -> None:
+        self.assertEqual(self.check.extract_matches("{{broken {{ valid }}"), ["valid"])
+
+    def test_braces_inside_expression(self) -> None:
+        self.assertEqual(
+            self.check.extract_matches("{{ {name: value} }}"), ["{name:value}"]
         )
 
     def test_check_highlight(self) -> None:
